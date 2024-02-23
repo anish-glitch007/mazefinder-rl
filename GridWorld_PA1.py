@@ -12,6 +12,9 @@ max_steps=100
 def row_col_to_seq(row_col, num_cols):  #Converts state number to row_column format
     return row_col[:,0] * num_cols + row_col[:,1]
 
+# print('ddddddddddddd',row_col_to_seq([[3, 6]],10))
+
+
 def seq_to_col_row(seq, num_cols): #Converts row_column format to state number
     r = floor(seq / num_cols)
     c = seq - r * num_cols
@@ -47,6 +50,12 @@ class GridWorld:
         self.r_dead = None
         self.gamma = 1 # default is no discounting
         self.wind = wind
+        self.done = False
+        self.state = None
+        self.P=None
+        self.R=None
+         
+        
 
     def add_obstructions(self, obstructed_states=None, bad_states=None, restart_states=None):
 
@@ -184,33 +193,40 @@ class GridWorld:
 
         return next_state
 
+    def choose_state(self, list_states):
+        choice = self.random_generator.randint(len(list_states))
+        return list_states[choice]
+
     def reset(self):
-    
+
+        
         self.done = False
         self.steps = 0
 
         return int(self.start_state_seq)
 
-    def step(self, state, action):
-
+    def step(self,action):
+        # assert action in self.action_space, "Wrong action %d chosen, Possible actions: %s"%(action, str(self.action_space))
+       
         if self.done:
             print('Episode done')
         
         self.steps+=1
 
+        # print(self.steps)
         
         p, r = 0, np.random.random()
         for next_state in range(self.num_states):
 
-            p += self.P[state, next_state, action]
+            p += self.P[self.state, next_state, action]
 
             if r <= p:
                 break
         
-        if state in self.goal_states:
+        if self.state in self.goal_states:
         
             self.done=True
-            return self.state,self.R[state],self.done
+            return self.state, self.R[self.state], self.done
         
         if self.steps >= max_steps:
             self.done = True
@@ -220,9 +236,9 @@ class GridWorld:
           arr = self.P[next_state, :, 3]
           next_next = np.where(arr == np.amax(arr))
           next_next = next_next[0][0]
-          return next_next, self.R[next_next],self.done
+          return next_next, self.R[next_next], self.done
         else:
-          return next_state, self.R[next_state],self.done
+          return next_state, self.R[next_state], self.done
         
         
         
