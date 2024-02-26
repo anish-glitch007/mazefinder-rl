@@ -5,6 +5,7 @@ RIGHT = 3
 
 
 from math import floor
+
 import numpy as np
 import matplotlib.pyplot as plt
 max_steps=100
@@ -209,6 +210,7 @@ class GridWorld:
             print('Episode done')
         
         self.steps+=1
+        # print('steps: ', self.steps)
 
         # print(self.steps)
         
@@ -220,8 +222,13 @@ class GridWorld:
             if r <= p:
                 break
         
+        # print("current state: ", state)
+        # print("next-state: ",next_state)
+
+        
+
         #Termination conditions
-        if state in self.goal_states or self.steps >- max_steps:
+        if state in self.goal_states or self.steps >= max_steps:
             self.done=True
             return state, self.R[state]
 
@@ -237,9 +244,11 @@ class GridWorld:
         
         
         
+        
 # specify world parameters
 num_cols = 10
 num_rows = 10
+num_actions = 4
 obstructions = np.array([[0,7],[1,1],[1,2],[1,3],[1,7],[2,1],[2,3],
                          [2,7],[3,1],[3,3],[3,5],[4,3],[4,5],[4,7],
                          [5,3],[5,7],[5,9],[6,3],[6,9],[7,1],[7,6],
@@ -254,6 +263,7 @@ gw = GridWorld(num_rows=num_rows,
                num_cols=num_cols,
                start_state=start_state,
                goal_states=goal_states, wind = False)
+
 gw.add_obstructions(obstructed_states=obstructions,
                     bad_states=bad_states,
                     restart_states=restart_states)
@@ -280,7 +290,18 @@ def plot_Q(Q, message = "Q plot"):
     
     plt.figure(figsize=(10,10))
     plt.title(message)
-    plt.pcolor(Q.max(-1), edgecolors='k', linewidths=2)
+    Q_ = np.zeros((num_rows, num_cols, num_actions))
+
+    # for i in range(len(Q)):
+    #     [r,c] = seq_to_col_row(i, num_cols)[0]
+    #     Q_[r,c] = Q[i]
+
+    Q_ = Q.reshape((num_rows, num_cols, num_actions))
+
+    
+    # print(True if Q1.all() == Q_.all() else False)
+
+    plt.pcolor(Q_.max(-1), edgecolors='k', linewidths=2)
     plt.colorbar()
     def x_direct(a):
         if a in [UP, DOWN]:
@@ -290,9 +311,10 @@ def plot_Q(Q, message = "Q plot"):
         if a in [RIGHT, LEFT]:
             return 0
         return 1 if a == UP else -1
-    policy = Q.argmax(-1)
+    policy = np.argmax(Q_, axis = -1)
     policyx = np.vectorize(x_direct)(policy)
     policyy = np.vectorize(y_direct)(policy)
     idx = np.indices(policy.shape)
+
     plt.quiver(idx[1].ravel()+0.5, idx[0].ravel()+0.5, policyx.ravel(), policyy.ravel(), pivot="middle", color='red')
     plt.show()
