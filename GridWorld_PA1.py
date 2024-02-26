@@ -51,9 +51,7 @@ class GridWorld:
         self.gamma = 1 # default is no discounting
         self.wind = wind
         self.done = False
-        self.state = None
-        self.P=None
-        self.R=None
+        self.steps = 0
          
         
 
@@ -199,13 +197,12 @@ class GridWorld:
 
     def reset(self):
 
-        
         self.done = False
         self.steps = 0
 
         return int(self.start_state_seq)
 
-    def step(self,action):
+    def step(self,state, action):
         # assert action in self.action_space, "Wrong action %d chosen, Possible actions: %s"%(action, str(self.action_space))
        
         if self.done:
@@ -218,27 +215,25 @@ class GridWorld:
         p, r = 0, np.random.random()
         for next_state in range(self.num_states):
 
-            p += self.P[self.state, next_state, action]
+            p += self.P[state, next_state, action]
 
             if r <= p:
                 break
         
-        if self.state in self.goal_states:
-        
+        #Termination conditions
+        if state in self.goal_states or self.steps >- max_steps:
             self.done=True
-            return self.state, self.R[self.state], self.done
-        
-        if self.steps >= max_steps:
-            self.done = True
-        
+            return state, self.R[state]
+
+        #Wind probability consideration
         if(self.wind and np.random.random() < 0.4):
 
-          arr = self.P[next_state, :, 3]
-          next_next = np.where(arr == np.amax(arr))
-          next_next = next_next[0][0]
-          return next_next, self.R[next_next], self.done
+            arr = self.P[next_state, :, 3]
+            next_next = np.where(arr == np.amax(arr))
+            next_next = next_next[0][0]
+            return next_next, self.R[next_next]
         else:
-          return next_state, self.R[next_state], self.done
+            return next_state, self.R[next_state]
         
         
         
